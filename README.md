@@ -1,6 +1,3 @@
-Dưới đây là toàn bộ nội dung file `README.md` được viết dưới dạng mã Markdown nguyên bản để bạn dễ dàng copy trực tiếp vào VS Code:
-
-```markdown
 # Topic 130 - Serverless "Cold-Start" Data Persistence: "Event-Driven Analytics"
 
 ## 📝 Giới thiệu Dự án
