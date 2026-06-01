@@ -60,5 +60,3 @@ Mô hình thực nghiệm ghi nhận sự chênh lệch rõ rệt về thời gi
 ### Biện luận lý thuyết (Özsu & Valduriez)
 
 Dựa trên lý thuyết hệ quản trị cơ sở dữ liệu phân tán của **Özsu và Valduriez**, chi phí thiết lập kết nối TCP/IP qua mạng giữa các nút tính toán và lưu trữ vô cùng tốn tài nguyên. Thực nghiệm cho thấy TTFB vọt lên gấp gần **14 lần** (từ `5.52 ms` lên `76.07 ms`) khi xảy ra hiện tượng khởi động nguội. Việc sử dụng Connection Pool ở phạm vi toàn cục (`Global Scope`) là chiến lược bắt buộc trong kiến trúc Serverless nhằm triệt tiêu độ trễ này cho các request kế tiếp.
-
-```
