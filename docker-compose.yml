@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Cấu hình Database PostgreSQL (Đạt điểm Flawless Orchestration logic với volume persistence)
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: analytics_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: analytics_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
+
+  # Cấu hình Serverless Function
+  analytics-function:
+    build:
+      context: ./analytics-function
+      dockerfile: Dockerfile
+    container_name: serverless_analytics_func
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres-db
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=analytics_db
+      - CONNECTION_STRATEGY=WARM # Thay đổi thành COLD để test ảnh hưởng Cold-start lên DB
+    depends_on:
+      - postgres-db
+    # Cơ chế tự động restart khi container tự tắt (process.exit) sau 30s không hoạt động
+    # Lúc này Docker Compose sẽ bật lại container lên (mô phỏng Cold Start khi có request mới)
+    restart: always
+
+volumes:
+  pgdata:
