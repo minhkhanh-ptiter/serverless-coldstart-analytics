@@ -78,6 +78,6 @@ Mô hình thực nghiệm ghi nhận sự chênh lệch rõ rệt về thời gi
 
 ### Biện luận lý thuyết (Özsu & Valduriez)
 
-Dựa trên lý thuyết hệ quản trị cơ sở dữ liệu phân tán của **Özsu và Valduriez**, chi phí thiết lập kết nối TCP/IP qua mạng giữa các nút tính toán và lưu trữ vô cùng tốn tài nguyên. Thực nghiệm cho thấy TTFB vọt lên gấp gần **14 lần** (từ `6.55 ms` lên `131.61 ms`) khi xảy ra hiện tượng khởi động nguội.
+Dựa trên lý thuyết hệ quản trị cơ sở dữ liệu phân tán của **Özsu và Valduriez**, chi phí thiết lập kết nối TCP/IP qua mạng giữa các nút tính toán và lưu trữ vô cùng tốn tài nguyên. Thực nghiệm cho thấy TTFB vọt lên gấp gần **20 lần** (từ `6.55 ms` lên `131.61 ms`) khi xảy ra hiện tượng khởi động nguội.
 
 Việc duy trì một Connection Pool tĩnh ở lớp phạm vi toàn cục (`Global Scope`) là chiến lược kiến trúc bắt buộc trong Serverless nhằm triệt tiêu độ trễ truyền thông này. Đồng thời, kiến trúc tách biệt hoàn toàn giữa Stateless Compute và Stateful Storage kết hợp Docker Volume giúp bảo toàn tuyệt đối tính toàn vẹn (`Data Persistence`) của bộ dữ liệu clickstream quy mô lớn ngay cả khi xảy ra sự cố sập nút phân tán ngẫu nhiên.
