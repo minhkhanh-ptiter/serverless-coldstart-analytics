@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Cấu hình Database PostgreSQL (Đạt điểm Flawless Orchestration logic với volume persistence)
+  # Cấu hình Database PostgreSQL
   postgres-db:
     image: postgres:15-alpine
     container_name: analytics_postgres

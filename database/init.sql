@@ -1,4 +1,3 @@
--- database/init.sql
 CREATE TABLE IF NOT EXISTS clickstream_events (
     id SERIAL PRIMARY KEY,
     user_id VARCHAR(50) NOT NULL,

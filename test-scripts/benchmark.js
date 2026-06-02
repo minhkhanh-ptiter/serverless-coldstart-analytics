@@ -1,4 +1,3 @@
-// test-scripts/benchmark.js
 const http = require('http');
 
 // Cấu hình request gửi tới Serverless Function
@@ -23,7 +22,7 @@ const options = {
 function measureRequest(label) {
     return new Promise((resolve) => {
         const startTime = process.hrtime.bigint(); // Thời gian bắt đầu (nano giây)
-        let ttfbDurationMs = 0; // ĐƠN VỊ ĐÃ SỬA: Khai báo ở phạm vi hàm để mọi sự kiện đều dùng được
+        let ttfbDurationMs = 0; // Khai báo ở phạm vi hàm để mọi sự kiện đều dùng được
         
         const req = http.request(options, (res) => {
             // Sự kiện 'readable' hoặc nhận được chunk đầu tiên chính là mốc tính TTFB
