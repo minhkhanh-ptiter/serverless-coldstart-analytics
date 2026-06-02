@@ -1,4 +1,3 @@
-// test-scripts/live-fault-test.js
 const http = require('http');
 
 const postData = JSON.stringify({

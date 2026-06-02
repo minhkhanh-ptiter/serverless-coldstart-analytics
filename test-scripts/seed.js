@@ -1,4 +1,3 @@
-// test-scripts/seed.js
 const http = require('http');
 
 console.log("🚀 Đang tiến hành bơm dữ liệu giả lập clickstream lớn vào hệ thống...");

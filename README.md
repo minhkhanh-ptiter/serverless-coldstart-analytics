@@ -34,14 +34,31 @@ docker compose up --build
 
 *Đợi cho đến khi thấy log báo `🚀 Function đang lắng nghe tại port 8080`. Hệ thống sẽ tự động tắt container ứng dụng sau 30s nếu không nhận được request nào.*
 
-### 3. Chạy Script đo đạc kiểm thử Performance (TTFB)
+### 3. Thực hiện các kịch bản kiểm thử
 
 Mở một terminal mới song song (giữ nguyên terminal Docker đang chạy) và thực hiện lệnh:
+
+* **Kịch bản 1: Đo đạc hiệu năng và trễ Cold Start (TTFB)**
 
 ```bash
 node test-scripts/benchmark.js
 
 ```
+
+* **Kịch bản 2: Bơm tải lớn giả lập luồng dữ liệu quy mô ~50.000 bản ghi**
+
+```bash
+node test-scripts/seed.js
+
+```
+
+* **Kịch bản 3: Thử nghiệm khả năng chịu lỗi và tự phục hồi khi tắt đột ngột Database**
+
+```bash
+node test-scripts/live-fault-test.js
+
+```
+*(Trong lúc luồng log đang chạy, thực hiện lệnh docker stop analytics_postgres để ngắt DB và docker start analytics_postgres để kiểm tra tính năng khôi phục tự động).*
 
 ---
 
@@ -51,12 +68,16 @@ Mô hình thực nghiệm ghi nhận sự chênh lệch rõ rệt về thời gi
 
 | Kịch bản Test | Trạng thái hệ thống | Thời gian TTFB (ms) | Hành vi kết nối Database |
 | --- | --- | --- | --- |
-| **Warm Request 1** | Container đang ngủ sâu | *Socket hang up* | Hệ thống bị đứt gãy kết nối do Docker đang dựng lại runtime. |
-| **Warm Request 2** | Khởi động container | **~79.07 ms** | Thiết lập ban đầu và khởi tạo Global Connection Pool. |
-| **Warm Request 3** | Hệ thống ấm (Warm) | **~5.52 ms** | Tối ưu tối đa nhờ tái sử dụng kết nối có sẵn từ Pool. |
-| **Cold Request** | Hồi sinh sau 32s ngủ | **~76.07 ms** | Chịu chi phí phạt (Cold Start Penalty) để nạp lại runtime và pool. |
-| **Warm-back Request** | Ổn định sau Cold Start | **~6.84 ms** | Hệ thống quay lại trạng thái tối ưu. |
+| **Warm Request 1** | Khởi động ban đầu | **143.47 ms** | Thời gian nạp môi trường ứng dụng và tạo lập Connection Pool. |
+| **Warm Request 2** | Hệ thống ấm dần | **7.85 ms** | Pool kết nối đi vào hoạt động, triệt tiêu độ trễ bắt tay mạng. |
+| **Warm Request 3** | Hệ thống ấm (Warm) | **6.55 ms** | Đạt trạng thái tối ưu tối đa nhờ tái sử dụng kết nối tĩnh từ Pool. |
+| **Cold Request** | Hồi sinh sau 32s ngủ | **131.61 ms** | Chịu chi phí phạt (Cold Start Penalty) để nạp lại runtime và pool. |
+| **Warm-back Request** | Ổn định sau Cold Start | **13.98 ms** | Hệ thống lập tức hồi phục về mức độ trễ thấp nhờ mượn pool mở sẵn. |
+| **Database Down** | Nút lưu trữ bị ngắt | *500 / Network Error* | Tầng ứng dụng cô lập hoàn toàn lỗi mạng, không sập crash mã nguồn. |
+| **Database Recovery** | Nút lưu trữ hồi sinh | *Tự động về 200 OK* | Hệ thống tự động thiết lập lại Pool kết nối (Self-healing thành công). |
 
 ### Biện luận lý thuyết (Özsu & Valduriez)
 
-Dựa trên lý thuyết hệ quản trị cơ sở dữ liệu phân tán của **Özsu và Valduriez**, chi phí thiết lập kết nối TCP/IP qua mạng giữa các nút tính toán và lưu trữ vô cùng tốn tài nguyên. Thực nghiệm cho thấy TTFB vọt lên gấp gần **14 lần** (từ `5.52 ms` lên `76.07 ms`) khi xảy ra hiện tượng khởi động nguội. Việc sử dụng Connection Pool ở phạm vi toàn cục (`Global Scope`) là chiến lược bắt buộc trong kiến trúc Serverless nhằm triệt tiêu độ trễ này cho các request kế tiếp.
+Dựa trên lý thuyết hệ quản trị cơ sở dữ liệu phân tán của **Özsu và Valduriez**, chi phí thiết lập kết nối TCP/IP qua mạng giữa các nút tính toán và lưu trữ vô cùng tốn tài nguyên. Thực nghiệm cho thấy TTFB vọt lên gấp gần **14 lần** (từ `6.55 ms` lên `131.61 ms`) khi xảy ra hiện tượng khởi động nguội.
+
+Việc duy trì một Connection Pool tĩnh ở lớp phạm vi toàn cục (`Global Scope`) là chiến lược kiến trúc bắt buộc trong Serverless nhằm triệt tiêu độ trễ truyền thông này. Đồng thời, kiến trúc tách biệt hoàn toàn giữa Stateless Compute và Stateful Storage kết hợp Docker Volume giúp bảo toàn tuyệt đối tính toàn vẹn (`Data Persistence`) của bộ dữ liệu clickstream quy mô lớn ngay cả khi xảy ra sự cố sập nút phân tán ngẫu nhiên.
